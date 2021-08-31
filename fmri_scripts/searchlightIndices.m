@@ -1,4 +1,4 @@
-function [vind,mind] = searchlightIndices(mask,slRadius)
+function [vind,mind,sl_centers] = searchlightIndices(mask,slRadius)
 
 
 dim = size(mask);                 % volume dimensions
@@ -30,13 +30,21 @@ fprintf('  searchlight size: %d\n', size(di, 1))
 tic
 t = 0;
 cmvi = 0;
+
+
+
+
+
 for cvvi = 1 : nVolumeVoxels        % searchlight center volume voxel index
+    
     % process only if center is within mask 
     if mask(cvvi)
         cmvi = cmvi + 1;            % searchlight center mask voxel index
+
         
         % searchlight center coordinates
         [xi, yi, zi] = ind2sub(dim, cvvi);
+        
         % searchlight voxel coordinates; limit to volume boundaries
         ind = (xi + dxi >= 1) & (xi + dxi <= dim(1)) & ...
             (yi + dyi >= 1) & (yi + dyi <= dim(2)) & ...
@@ -51,6 +59,10 @@ for cvvi = 1 : nVolumeVoxels        % searchlight center volume voxel index
         vind{cmvi} = vvi; % volume indices
         mind{cmvi} = mvi; % mask indices
         
+        %store index of searchlight center
+        sl_centers{cmvi} = cvvi;
+        
+        
     end
     
     % progress
@@ -60,4 +72,5 @@ for cvvi = 1 : nVolumeVoxels        % searchlight center volume voxel index
         fprintf(' %6.1f min  %6d voxels  %5.1f %%\n', ...
             t / 60, cmvi, cmvi / nMaskVoxels * 100)
     end
+    
 end

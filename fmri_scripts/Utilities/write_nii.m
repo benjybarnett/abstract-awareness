@@ -14,7 +14,9 @@ if ~exist(outputFn,'file'); else delete(outputFn); end
 
 % find out if user wants .nii or .nii.gz
 [filePath,fileName,fileExt] = fileparts(outputFn);
-
+disp(filePath)
+disp(fileName)
+disp(fileExt)
 switch fileExt
     case '.gz'
         % here user wants to gzip final output, but first we need to write
