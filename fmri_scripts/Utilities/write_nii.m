@@ -34,6 +34,7 @@ switch fileExt
         % do not gzip, keep current output filename
         unzipFn = outputFn;
         zipFile = false;   
+        disp('correct')
 end
 
 % write to disk
