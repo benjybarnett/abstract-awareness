@@ -34,7 +34,7 @@ switch fileExt
         % do not gzip, keep current output filename
         unzipFn = outputFn;
         zipFile = false;   
-        disp('correct')
+        
 end
 
 % write to disk
@@ -64,8 +64,10 @@ elseif length(V.dim) == 4
     % merge the temp NIFTIs into 4-D NIFTI using FSL
     % note that FSL gzips the new file, no matter what
     concatImgStr = sprintf('%s ', tmpFns{:});
+    disp(concatImgStr)
+    disp(outputFn)
     unix(['fslmerge -t ' outputFn ' ' concatImgStr]);
-    
+  
     % remove all the temp NIFTIs
     for f = 1:length(tmpFns)
         delete(tmpFns{f});

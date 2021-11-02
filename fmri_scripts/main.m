@@ -172,7 +172,7 @@ write_nii(hdr,mean_acc,output_file);
 %% run permutation testing for cross condition decoding
 cfg = [];
 cfg.subjects = subjs;
-cfg.nPerm = 1;
+cfg.nPerm = 25;
 cfg.nFold=5;
 cfg.gamma =0.2;
 cfg.sl_radius = 4;
@@ -180,9 +180,48 @@ cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
 cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
 cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
 cfg.decoding_type = 'cross';
-cfg.nBtrsp = 10;
+cfg.nBtrsp = 10000;
 
-CrossDecodingSearchlightPermutationBOB(cfg);
+[~,~,accIA_btstrp,accAI_btstrp] =CrossDecodingSearchlightPermutationBOB(cfg);
 
+%% run permutation testing for within condition decoding
+cfg = [];
+cfg.subjects = subjs;
+cfg.nPerm = 25;
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.sl_radius = 4;
+cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.decoding_type = 'within';
+cfg.nBtrsp = 10000;
 
+WithinDecodingSearchlightPermutationBOB(cfg);
+
+%% run permutation testing for paired test cross vs within
+cfg = [];
+cfg.subjects = subjs;
+cfg.nPerm = 25;
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.sl_radius = 4;
+cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.empirical_map = 'inanimate';
+cfg.order = 2; %change this with cfg.empirical_map
+cfg.nBtrsp = 10000;
+
+paired_test_bootstrap(cfg);
+
+%% multiple comparisons correction
+cfg =[];
+cfg.root = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.decoding_type = 'within';
+cfg.empirical_map = 'inanimate.nii';
+cfg.pvals_map = 'I.nii';
+cfg.mask = 'stat_mask.nii';
+cfg.qval = 0.01;
+sig_vals = MCCmask(cfg);
 
