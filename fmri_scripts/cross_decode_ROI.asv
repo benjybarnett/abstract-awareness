@@ -1,0 +1,50 @@
+function [hdr, acc] = cross_decode_ROI(cfg,subject)
+
+%function to cross decode using a multivoxel pattern taken from an ROI
+%No searchlight procedure here.
+
+    data_dir = cfg.data_dir;
+    beta_path = strcat(data_dir,subject,'\');
+
+    % set random generator for repeatability
+    rng(1,'twister')
+
+    % load roi mask
+    [hdr,mask]    = read_nii(fullfile(cfg.roi_path,cfg.roi_file));
+    
+    %% Get the data
+    % load SPM file
+    SPM = load(strcat(data_dir,subject,'\SPM.mat'));
+    SPM = SPM.SPM;
+    
+    % get conscious betas
+    conIdx = find(contains(SPM.xX.name,'Sn(1) conscious'));
+    trials = SPM.xX.name(conIdx);
+    
+    %create list of indices for trial type (animate / inanimate). These are
+    %going to index the nTrials x nVoxels matrix we make
+    Y=[];
+    for trl = 1:length(trials)
+        trial = trials(trl);
+        trial = reverse(char(trial));
+
+        if trial(12) == '1' || trial(12) == '2' %if trial is animate stim
+            Y = [Y 0]; %0 for animate
+        elseif trial(12) == '3' || trial(12) == '4' %if trial is inanimate stim
+            Y = [Y 1]; %1 for animate
+        end  
+    end
+
+    %load Beta files
+    Betas=[];
+    for t = 1:length(conIdx)
+        [~,beta] = read_nii(fullfile(beta_path,sprintf('beta_%04d.nii',conIdx(t))));
+        Betas(t,:) = beta(mask>0);
+    end
+    
+    % downsample
+    idx = balance_trials(double(Y)+1,'downsample'); %idx is a Nclass x 1 cell, each cell with [Ntrials x 1] containing indices for trials of particular classs
+    fprintf('Modality %d: %d trials per class \n',d,length(idx{1}));
+
+    
+end

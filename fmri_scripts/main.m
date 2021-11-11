@@ -225,3 +225,104 @@ cfg.mask = 'stat_mask.nii';
 cfg.qval = 0.01;
 sig_vals = MCCmask(cfg);
 
+%% ROI analysis
+%Decode visual ROI animate vs inanimate
+cfg = [];
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.roi_file = 'visualROI.nii'; 
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.roi = 'visual';
+cfg.nPerm = 25;
+cfg.nBtrsp=10000;
+cfg.subjects=subjs;
+
+vis_pval = decode_ROI(cfg);
+
+%decode frontal ROI animate vs inanimate
+cfg = [];
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.roi_file = 'frontalROI.nii'; 
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.roi = 'frontal';
+cfg.nPerm = 25;
+cfg.nBtrsp=10000;
+cfg.subjects=subjs;
+
+frontal_pval = decode_ROI(cfg);
+  
+%decode visual ROI pairwise stims
+pairs = {{'1','2'}
+    {'1','3'}
+    {'1','4'}
+    {'2','3'}
+    {'2','4'}
+    {'3','4'}};
+visual_pvals=[];
+for p = 1:length(pairs)
+    pair = pairs{p};
+    
+    cfg = [];
+    cfg.nFold=5;
+    cfg.gamma =0.2;
+    cfg.roi_file = 'visualROI.nii'; 
+    cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+    cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+    cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+    cfg.roi = 'visual';
+    cfg.nPerm = 25;
+    cfg.nBtrsp=10000;
+    cfg.subjects=subjs;
+    cfg.pair_name = strcat(pair{1},'_v_',pair{2});
+    cfg.pairs = pair;
+
+    visual_pvals(p) = decode_ROI_pairwise(cfg);
+end
+
+%decode frontal ROI stim 1 vs stim 2
+frontal_pvals=[];
+for p = 1:length(pairs)
+    pair = pairs{p};
+    
+    cfg = [];
+    cfg.nFold=5;
+    cfg.gamma =0.2;
+    cfg.roi_file = 'frontalROI.nii'; 
+    cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+    cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+    cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+    cfg.roi = 'frontal';
+    cfg.nPerm = 25;
+    cfg.nBtrsp=10000;
+    cfg.subjects=subjs;
+    cfg.pair_name = strcat(pair{1},'_v_',pair{2});
+    cfg.pairs = pair;
+
+    frontal_pvals(p) = decode_ROI_pairwise(cfg);
+end
+
+
+for p = 1:length(pairs)
+    pair = pairs{p};
+    disp(pair)
+    test_vals(p,:) = strcat(pair{1},pair{2});
+end
+
+%% ROI RSA
+cfg = [];
+cfg.nFold=5;
+cfg.roi_file = 'visualROI.nii'; 
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.roi = 'visual';
+cfg.subjects=subjs;
+cfg.modelRDM = 'GIST_rdm.mat';
+cfg.nPerm=25;
+cfg.nBtrsp = 10000;
+roi_RSA(cfg);

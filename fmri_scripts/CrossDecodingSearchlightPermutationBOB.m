@@ -1,5 +1,5 @@
 function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
-    %{
+    
     
 
     data_dir = cfg.data_dir;
@@ -204,7 +204,7 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
     clear accuracy
     end
 end 
-%}
+
     %% Create group null distributions 
     groupDir = fullfile(cfg.output_dir,'group\cross\');
     if ~exist(groupDir,'dir'); mkdir(groupDir); end
