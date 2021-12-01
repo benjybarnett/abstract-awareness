@@ -1,4 +1,4 @@
-function  pval =  roi_RSA(cfg)
+function  pval =  roi_RSA_vis(cfg)
 
 
     for subj = 1:length(cfg.subjects)
@@ -25,24 +25,41 @@ function  pval =  roi_RSA(cfg)
         trials = SPM.xX.name(conIdx);
         
         %% create neural RDM
+       
+        disp('visibility included in model')
+        fish_low = [];
+        rooster_low = [];
+        ball_low = [];
+        can_low = [];
+        fish_high = [];
+        rooster_high = [];
+        ball_high = [];
+        can_high = [];
 
-        rooster=[];
-        fish=[];
-        can=[];
-        football=[];
+        %get med split value for visibility ratings
+        med = getMedSplit(subject,data_dir);
+
         for trl = 1:length(trials)
             trial = trials(trl);
             trial = reverse(char(trial));
 
 
-            if trial(12) == '1'
-                rooster = [rooster trl]; %get index of all rooster trials
-            elseif trial(12) == '2'
-                fish = [fish trl]; %get index of all fish trials
-            elseif trial(12) =='3'
-                can = [can trl]; %get index of all fish trials
-            elseif trial(12) =='4'
-                football=[football trl];
+            if trial(12) == '1' && str2double(trial(7)) < med
+                rooster_low = [rooster_low trl]; %get index of all rooster trials
+            elseif trial(12) == '1' && str2double(trial(7)) >= med
+                rooster_high = [rooster_high trl];
+            elseif trial(12) == '2' && str2double(trial(7)) < med
+                fish_low = [fish_low trl]; %get index of all rooster trials
+            elseif trial(12) == '2' && str2double(trial(7)) >= med
+                fish_high = [fish_high trl];
+            elseif trial(12) == '3' && str2double(trial(7)) < med
+                ball_low = [ball_low trl]; %get index of all rooster trials
+            elseif trial(12) == '3' && str2double(trial(7)) >= med
+                ball_high = [ball_high trl];    
+            elseif trial(12) == '4' && str2double(trial(7)) < med
+                can_low = [can_low trl]; %get index of all rooster trials
+            elseif trial(12) == '4' && str2double(trial(7)) >= med
+                can_high = [can_high trl]; 
             end
         end  
 
@@ -54,18 +71,26 @@ function  pval =  roi_RSA(cfg)
         end
         Betas(:,isnan(Betas(1,:))) = []; %remove NaNs
 
-        mean_rooster = mean(Betas(rooster,:),1);
-        mean_fish = mean(Betas(fish,:),1);
-        mean_can = mean(Betas(can,:),1);
-        mean_football = mean(Betas(football,:),1);
+        mean_rooster_low = mean(Betas(rooster_low,:),1);
+        mean_rooster_high = mean(Betas(rooster_high,:),1);
+        mean_fish_low = mean(Betas(fish_low,:),1);
+        mean_fish_high = mean(Betas(fish_high,:),1);
+        mean_ball_low = mean(Betas(ball_low,:),1);
+        mean_ball_high = mean(Betas(ball_high,:),1);
+        mean_can_low = mean(Betas(can_low,:),1);
+        mean_can_high = mean(Betas(can_high,:),1);
+
 
         %correlate
-        all_stims = zeros(4,length(mean_fish));
-        all_stims(1,:) = mean_fish;
-        all_stims(2,:) = mean_rooster;
-        all_stims(3,:) = mean_football;
-        all_stims(4,:) = mean_can;
-
+        all_stims = zeros(8,length(mean_fish_high));
+        all_stims(1,:) = mean_fish_low;
+        all_stims(2,:) = mean_rooster_low;
+        all_stims(3,:) = mean_ball_low;
+        all_stims(4,:) = mean_can_low;
+        all_stims(5,:) = mean_fish_high;
+        all_stims(6,:) = mean_rooster_high;
+        all_stims(7,:) = mean_ball_high;
+        all_stims(8,:) = mean_can_high;
         corrs = pdist(all_stims,'correlation');
         nRDM = squareform(corrs);
 
@@ -94,26 +119,45 @@ function  pval =  roi_RSA(cfg)
         for per = 1:cfg.nPerm
             %shuffle labels
 
-            all_stims = NaN(4,max([length(rooster),length(fish),length(can),length(football)]));
-            all_stims(1,1:length(rooster)) =rooster;
-            all_stims(2,1:length(fish)) = fish;
-            all_stims(3,1:length(can)) = can;
-            all_stims(4,1:length(football)) = football;
+            all_stims = NaN(8,max([length(rooster_high),...
+                length(rooster_low),...
+                length(fish_high),...
+                length(fish_low),...
+                length(ball_high),...
+                length(ball_low),...
+                length(can_high),...
+                length(can_low)]));
+                
+            all_stims(1,1:length(rooster_low)) =rooster_low;
+            all_stims(2,1:length(fish_low)) = fish_low;
+            all_stims(3,1:length(can_low)) = can_low;
+            all_stims(4,1:length(ball_low)) = ball_low;
+            all_stims(5,1:length(rooster_high)) =rooster_high;
+            all_stims(6,1:length(fish_high)) = fish_high;
+            all_stims(7,1:length(can_high)) = can_high;
+            all_stims(8,1:length(ball_high)) = ball_high;
             shuff_labels = randswap(all_stims,'full'); 
 
 
-            mean_rooster = mean(Betas(rmmissing(shuff_labels(1,:)),:),1);
-            mean_fish = mean(Betas(rmmissing(shuff_labels(2,:)),:),1);
-            mean_can = mean(Betas(rmmissing(shuff_labels(3,:)),:),1);
-            mean_football = mean(Betas(rmmissing(shuff_labels(4,:)),:),1);
+            mean_rooster_high = mean(Betas(rmmissing(shuff_labels(1,:)),:),1);
+            mean_fish_high = mean(Betas(rmmissing(shuff_labels(2,:)),:),1);
+            mean_can_high = mean(Betas(rmmissing(shuff_labels(3,:)),:),1);
+            mean_football_high = mean(Betas(rmmissing(shuff_labels(4,:)),:),1);
+            mean_rooster_low = mean(Betas(rmmissing(shuff_labels(1,:)),:),1);
+            mean_fish_low = mean(Betas(rmmissing(shuff_labels(2,:)),:),1);
+            mean_can_low = mean(Betas(rmmissing(shuff_labels(3,:)),:),1);
+            mean_football_low = mean(Betas(rmmissing(shuff_labels(4,:)),:),1);
 
             %correlate
-            all_stims = zeros(4,length(mean_fish));
-            all_stims(1,:) = mean_fish;
-            all_stims(2,:) = mean_rooster;
-            all_stims(3,:) = mean_football;
-            all_stims(4,:) = mean_can;
-
+            all_stims = zeros(8,length(mean_fish_high));
+            all_stims(1,:) = mean_fish_low;
+            all_stims(2,:) = mean_rooster_low;
+            all_stims(3,:) = mean_football_low;
+            all_stims(4,:) = mean_can_low;
+            all_stims(5,:) = mean_fish_high;
+            all_stims(6,:) = mean_rooster_high;
+            all_stims(7,:) = mean_football_high;
+            all_stims(8,:) = mean_can_high;
             corrs = pdist(all_stims,'correlation');
             nRDM = squareform(corrs);
 

@@ -1,4 +1,4 @@
-function [pval] = decode_ROI(cfg)
+function [mean_acc,pval] = decode_ROI(cfg)
 
 %function to cross decode using a multivoxel pattern taken from an ROI
 %No searchlight procedure here.
@@ -178,7 +178,7 @@ end
     
     
     pval = sum(acc_btstrp > mean(emp_dist))/cfg.nBtrsp;
-   
-    fprintf('\t Accuracy within the %s ROI has a p value  of %d \n',cfg.roi,pval);
+    mean_acc = mean(emp_dist);
+    fprintf('\t Accuracy within the %s ROI has a mean of %d and a p value  of %d \n',cfg.roi,mean_acc,pval);
 
 end

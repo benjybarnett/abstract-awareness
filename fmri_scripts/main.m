@@ -254,7 +254,7 @@ cfg.nPerm = 25;
 cfg.nBtrsp=10000;
 cfg.subjects=subjs;
 
-frontal_pval = decode_ROI(cfg);
+[visual_acc_shuff,visual_pval_shuff] = decode_ROI(cfg);
   
 %decode visual ROI pairwise stims
 pairs = {{'1','2'}
@@ -316,13 +316,45 @@ end
 %% ROI RSA
 cfg = [];
 cfg.nFold=5;
-cfg.roi_file = 'visualROI.nii'; 
+cfg.roi_file = 'frontalROI.nii'; 
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.roi = 'frontal';
+cfg.subjects=subjs;
+cfg.modelRDM = 'GIST_RDM.mat';
+cfg.model = 'gist';
+cfg.nPerm=25;
+cfg.nBtrsp = 1000;
+roi_RSA(cfg);
+
+% ROI RSA with visibility included
+cfg = [];
+cfg.roi_file = 'visualOcciROI.nii'; 
 cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
 cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
 cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
 cfg.roi = 'visual';
 cfg.subjects=subjs;
-cfg.modelRDM = 'GIST_rdm.mat';
+cfg.modelRDM = 'animacy_RDM_visibility_3.mat';
+cfg.model = 'animacy_visibility_rdm_3';
 cfg.nPerm=25;
 cfg.nBtrsp = 10000;
-roi_RSA(cfg);
+roi_RSA_vis(cfg);
+
+
+%% notes
+%get shuffled binary ROI decoding results for paired t test
+roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+vis_shuff_accs = [];
+fro_shuff_accs =[];
+for subj = 1:length(subjs)
+    disp(subj)
+    subject = subjs{subj};
+    
+    visual_shuff_acc = load(fullfile(cfg.output_dir,subject,'visual','shuff_acc.mat'));
+    frontal_shuff_acc = load(fullfile(cfg.output_dir,subject,'frontal','shuff_acc.mat'));
+    
+    vis_shuff_accs = [vis_shuff_accs visual_shuff_acc.acc];
+    fro_shuff_accs = [fro_shuff_accs frontal_shuff_acc.acc];
+end
