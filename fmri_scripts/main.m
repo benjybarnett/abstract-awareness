@@ -209,8 +209,8 @@ cfg.sl_radius = 4;
 cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
 cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
 cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
-cfg.empirical_map = 'inanimate';
-cfg.order = 2; %change this with cfg.empirical_map
+cfg.empirical_map = 'animate';
+cfg.order = 1; %change this with cfg.empirical_map
 cfg.nBtrsp = 10000;
 
 paired_test_bootstrap(cfg);
@@ -218,12 +218,85 @@ paired_test_bootstrap(cfg);
 %% multiple comparisons correction
 cfg =[];
 cfg.root = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
-cfg.decoding_type = 'within';
-cfg.empirical_map = 'inanimate.nii';
-cfg.pvals_map = 'I.nii';
+cfg.decoding_type = 'paired';
+cfg.empirical_map = 'animate_diff.nii';
+cfg.pvals_map = 'Paired.nii';
 cfg.mask = 'stat_mask.nii';
 cfg.qval = 0.01;
-sig_vals = MCCmask(cfg);
+[sig_vals,vals] = MCCmask(cfg);
+
+%% Content Decoding Searchlight
+tic
+cfg = [];
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.sl_radius = 4;
+cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.decoding_type = 'content';
+cfg.fname = 'content_sl.nii';
+for subj = 1:length(subjs)
+    
+    subject = subjs{subj};
+    disp(subject)
+    
+    [hdr,acc] = content_decode(cfg,subject);
+    output_path = fullfile(cfg.output_dir,subject,cfg.decoding_type);
+    
+    if ~isfolder(output_path)
+        mkdir(output_path)
+    end
+    
+    output_file = fullfile(output_path,cfg.fname);
+    write_nii(hdr,acc,output_file)
+   
+end
+toc
+
+%% create mean accuracy maps for content searchlights
+all_subjs=zeros(length(subjs),99,117,95);
+for subj = 1:length(subjs)
+    disp(subj)
+    subject = subjs{subj};
+    
+    [hdr,acc] = read_nii(fullfile(cfg.output_dir,subject,cfg.decoding_type,cfg.fname));
+    all_subjs(subj,:,:,:) = acc;
+end
+mean_acc = squeeze(mean(all_subjs));
+
+output_path = fullfile(cfg.output_dir,'group',cfg.decoding_type);
+output_file = fullfile(output_path,strcat('mean_',cfg.fname));
+if ~isfolder(output_path)
+        mkdir(output_path)
+end
+write_nii(hdr,mean_acc,output_file);
+
+%% run permutation testing for content decoding
+cfg = [];
+cfg.subjects = subjs;
+cfg.nPerm = 25;
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.sl_radius = 4;
+cfg.mask = 'stat_mask.nii'; % GM + has signal in each sub
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.decoding_type = 'content';
+cfg.nBtrsp = 10000;
+
+ContentDecodingSearchlightPermutationBOB(cfg);
+
+%% multiple comparisons correction
+cfg =[];
+cfg.root = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\results\';
+cfg.decoding_type = 'cross';
+cfg.empirical_map = 'train_inanimate.nii';
+cfg.pvals_map = 'IA.nii';
+cfg.mask = 'stat_mask.nii';
+cfg.qval = 0.01;
+[sig_vals,vals] = MCCmask(cfg);
+
 
 %% ROI analysis
 %Decode visual ROI animate vs inanimate
@@ -237,9 +310,10 @@ cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
 cfg.roi = 'visual';
 cfg.nPerm = 25;
 cfg.nBtrsp=10000;
+cfg.vis = 'low';
 cfg.subjects=subjs;
 
-vis_pval = decode_ROI(cfg);
+[vis_acc_low,vis_pval_low] = decode_ROI(cfg);
 
 %decode frontal ROI animate vs inanimate
 cfg = [];
@@ -252,9 +326,25 @@ cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
 cfg.roi = 'frontal';
 cfg.nPerm = 25;
 cfg.nBtrsp=10000;
+cfg.vis = 'low';
 cfg.subjects=subjs;
 
-[visual_acc_shuff,visual_pval_shuff] = decode_ROI(cfg);
+[frontal_acc_low,frontal_pval_low] = decode_ROI(cfg);
+
+cfg = [];
+cfg.nFold=5;
+cfg.gamma =0.2;
+cfg.roi_file = 'frontalROI.nii'; 
+cfg.data_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_data\';
+cfg.roi_path = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.output_dir = 'D:\bbarnett\Documents\ecobrain\fmri\fmri_analysis\ROI';
+cfg.roi = 'frontal';
+cfg.nPerm = 25;
+cfg.nBtrsp=10000;
+cfg.vis = 'high';
+cfg.subjects=subjs;
+
+[frontal_acc_high,frontal_pval_high] = decode_ROI(cfg);
   
 %decode visual ROI pairwise stims
 pairs = {{'1','2'}

@@ -259,12 +259,11 @@ end
         accAI_btstrp(b,:) = nanmean(accAI,2);
         accIA_btstrp(b,:) = nanmean(accIA,2);
     end
-    acc='delete this for final version';
     
     
     
     % compare to empirical distribution 
-    %[~,acc] = read_nii(fullfile(groupDir,'accuracy.nii'));
+    [~,acc] = read_nii(fullfile(groupDir,'mean_cross.nii'));
     [~,AI] = read_nii(fullfile(groupDir,'mean_train_animate.nii'));
     [V,IA] = read_nii(fullfile(groupDir,'mean_train_inanimate.nii'));
 
@@ -296,18 +295,20 @@ end
     tmp(mask>0) = 1-pvals;
     write_nii(V,tmp,fullfile(groupDir,'1-rpValsIA.nii'));
 
+
+
     tmp = zeros(V.dim);
     pvals = sum(((accIA_btstrp+accAI_btstrp)./2) > acc(mask>0)')/cfg.nBtrsp;
     tmp(mask>0) = pvals;
-    write_nii(V,tmp,fullfile(groupDir,'pVals.nii'));
+    write_nii(V,tmp,fullfile(groupDir,'pVals_both.nii'));
     tmp(mask>0) = 1-pvals;
-    write_nii(V,tmp,fullfile(groupDir,'1-pVals.nii'));
+    write_nii(V,tmp,fullfile(groupDir,'1-pVals_both.nii'));
 
     tmp = zeros(V.dim);
     pvals = sum(((accIA_btstrp+accAI_btstrp)./2) < acc(mask>0)')/cfg.nBtrsp;
     tmp(mask>0) = pvals;
-    write_nii(V,tmp,fullfile(groupDir,'rpVals.nii'));
+    write_nii(V,tmp,fullfile(groupDir,'rpVals_both.nii'));
     tmp(mask>0) = 1-pvals;
-    write_nii(V,tmp,fullfile(groupDir,'1-rpVals.nii'));
+    write_nii(V,tmp,fullfile(groupDir,'1-rpVals_both.nii'));
 
 

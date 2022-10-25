@@ -154,8 +154,7 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
                     nTrialsTrain = size(anim_slX,1); nTrialsTest = size(inanim_slX,1);
                     Xhat = zeros(nTrialsTest,1);
 
-                    % do n Fold cross-validation training on train set and
-                    % testing on test set
+                    % do n Fold cross-validation 
                     for f = 1:cfg.nFold
                         trainidx = setdiff(1:nTrialsTrain,train_folds{f}); %return indices of trials not in fold - used for training
                         testidx = test_folds{f}; %return indices of trials in fold - used for testing
@@ -178,8 +177,7 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
                     nTrialsTrain = size(inanim_slX,1); nTrialsTest = size(anim_slX,1);
                     Xhat = zeros(nTrialsTest,1);
 
-                    % do n Fold cross-validation training on train set and
-                    % testing on test set
+                    % do n Fold cross-validation 
                     for f = 1:cfg.nFold
                         trainidx = setdiff(1:nTrialsTrain,train_folds{f}); %return indices of trials not in fold - used for training
                         testidx = test_folds{f}; %return indices of trials in fold - used for testing
@@ -205,12 +203,15 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
     
     clear accuracy
     end
-   
+end 
 
     %% Create group null distributions 
     groupDir = fullfile(cfg.output_dir,'group\cross\');
     if ~exist(groupDir,'dir'); mkdir(groupDir); end
 
+    
+      % load grey matter mask and functional
+    [hdr,mask]    = read_nii(cfg.mask);
     % loading permutations
     accAI_perm = []; 
     accIA_perm = []; 
@@ -244,6 +245,7 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
     accAI_btstrp = nan(cfg.nBtrsp,sum(mask(:)>0));
     accIA_btstrp = nan(cfg.nBtrsp,sum(mask(:)>0));
     nSubs = size(accAI_perm,1);
+    
     for b = 1:cfg.nBtrsp
 
         if mod(b,100)==0; fprintf('\t Bootstrapping %d out of %d \n',b, cfg.nBtrsp); end
@@ -257,12 +259,13 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
         accAI_btstrp(b,:) = nanmean(accAI,2);
         accIA_btstrp(b,:) = nanmean(accIA,2);
     end
-
+    
+    
     
     % compare to empirical distribution 
-    [~,acc] = read_nii(fullfile(groupDir,'accuracy.nii'));
-    [~,AI] = read_nii(fullfile(groupDir,'accuracyAI.nii'));
-    [V,IA] = read_nii(fullfile(groupDir,'accuracyIA.nii'));
+    %[~,acc] = read_nii(fullfile(groupDir,'accuracy.nii'));
+    [~,AI] = read_nii(fullfile(groupDir,'mean_train_animate.nii'));
+    [V,IA] = read_nii(fullfile(groupDir,'mean_train_inanimate.nii'));
 
     tmp = zeros(V.dim);
     pvals = sum(accAI_btstrp > AI(mask>0)')/cfg.nBtrsp;
@@ -292,15 +295,17 @@ function [hdr, acc] = CrossDecodingSearchlightPermutationBOB(cfg)
     tmp(mask>0) = 1-pvals;
     write_nii(V,tmp,fullfile(groupDir,'1-rpValsIA.nii'));
 
+
+
     tmp = zeros(V.dim);
-    pvals = sum(((accIA_btstrp+accIP_btstrp)./2) > acc(mask>0)')/cfg.nBtrsp;
+    pvals = sum(((accIA_btstrp+accAI_btstrp)./2) > acc(mask>0)')/cfg.nBtrsp;
     tmp(mask>0) = pvals;
     write_nii(V,tmp,fullfile(groupDir,'pVals.nii'));
     tmp(mask>0) = 1-pvals;
     write_nii(V,tmp,fullfile(groupDir,'1-pVals.nii'));
 
     tmp = zeros(V.dim);
-    pvals = sum(((accPI_btstrp+accIP_btstrp)./2) < acc(mask>0)')/cfg.nBtrsp;
+    pvals = sum(((accIA_btstrp+accAI_btstrp)./2) < acc(mask>0)')/cfg.nBtrsp;
     tmp(mask>0) = pvals;
     write_nii(V,tmp,fullfile(groupDir,'rpVals.nii'));
     tmp(mask>0) = 1-pvals;

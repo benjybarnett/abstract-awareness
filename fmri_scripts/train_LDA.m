@@ -45,7 +45,6 @@ numF = size(Y, 2);
 % Calculate group means
 m0 = mean(Y(X==0, :), 1);
 m1 = mean(Y(X==1, :), 1);
-
 %Difference between means
 d = m1 - m0;
 
@@ -58,7 +57,11 @@ S = 0.5*(S0 + S1);
 
 % Regularize pooled covariance matrix
 if isfield(cfg0, 'gamma')
+    
     S = (1-cfg0.gamma)*S + cfg0.gamma*eye(numF)*trace(S)/numF;
+    %pooled covariance matrix is scaled towards the identity matrix with cfg.gamma 
+    %on the diagonal scaled by the average sample variance (trace(S)/numF). 
+    %With shrinkage parameter of cfg.gamma.
 end
 
 % Calculate weights

@@ -2,6 +2,7 @@ function [mean_acc,pval] = decode_ROI(cfg)
 
 %function to cross decode using a multivoxel pattern taken from an ROI
 %No searchlight procedure here.
+
 for subj = 1:length(cfg.subjects)
     subject = cfg.subjects{subj};
     
@@ -24,6 +25,32 @@ for subj = 1:length(cfg.subjects)
     conIdx = find(contains(SPM.xX.name,'Sn(1) conscious') );
     trials = SPM.xX.name(conIdx);
     
+    %get low or high vis trials 
+    med = getMedSplit(subject,data_dir);
+    low_vals = 1:med-1;
+    high_vals = med:4;
+    
+    low_vectors = [];
+    high_vectors = [];
+    if strcmp(cfg.vis,'low')
+        for val = 1:length(low_vals)
+            v = low_vals(val);
+            low_vectors(val,:) = contains(trials,strcat('vis',string(v)));
+        end
+        all_trials = sum(low_vectors,1);
+
+    elseif strcmp(cfg.vis,'high')
+        for val = 1:length(high_vals)
+            v = high_vals(val);
+            high_vectors(val,:) = contains(trials,strcat('vis',string(v)));
+        end
+        all_trials = sum(high_vectors,1);
+    end
+    
+    all_trials_idx = find(all_trials);
+    
+    trials = trials(all_trials_idx); %get all trials within low or high visibility condition
+   
     %create list of indices for trial type (animate / inanimate). These are
     %going to index the nTrials x nVoxels matrix we make
     Y=[];
@@ -81,7 +108,7 @@ for subj = 1:length(cfg.subjects)
     acc = mean(yhat == Y); 
     
     % save true accuracies
-    outputDir = fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi);
+    outputDir = fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi,cfg.vis);
     if ~exist(outputDir,'dir'); mkdir(outputDir); end
     save(fullfile(outputDir,'true_acc.mat'),'acc')
     
@@ -123,13 +150,13 @@ for subj = 1:length(cfg.subjects)
     save(fullfile(outputDir,'accuracyPerm.mat'),'accuracy')
 end
     
-    
+   
     %% Bootstrap to create group level null distribution
     % loading permutations
     acc_perm = []; 
     for subj = 1:length(cfg.subjects)
 
-        outputDir = fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi);
+        outputDir = fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi,cfg.vis);
 
         if exist(fullfile(outputDir,'accuracyPerm.mat'),'file')
 
@@ -166,13 +193,17 @@ end
         acc_btstrp(b) = nanmean(acc,2);
       
     end
+    
+        if ~exist(fullfile(cfg.output_dir,'Group',cfg.roi,cfg.vis),'dir'); mkdir(fullfile(cfg.output_dir,'Group',cfg.roi,cfg.vis)); end
+        save(fullfile(cfg.output_dir,'Group',cfg.roi,cfg.vis,'btstrpDist.mat'),'acc_btstrp')
 
+    
     % compare to empirical distribution 
     emp_dist = [];
     for subj = 1:length(cfg.subjects)
         subject = cfg.subjects{subj};
         
-        true_acc = load(fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi,'true_acc.mat'));
+        true_acc = load(fullfile(cfg.output_dir,cfg.subjects{subj},cfg.roi,cfg.vis,'true_acc.mat'));
         emp_dist = [emp_dist true_acc.acc];
     end
     

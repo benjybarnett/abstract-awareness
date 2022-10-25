@@ -1,11 +1,11 @@
-function [sig_vals] = MCCmask(cfg)
+function [sig_vals,vals] = MCCmask(cfg)
 % function MCCmask(cfg)
 %
 % corrects pvals for multiple comparisons and masks with stat mask to show only
 % significant values
 
 % q-value
-if ~isfield(cfg,'qval'); cfg.qval = 0.05; end
+if ~isfield(cfg,'qval'); cfg.qval = 0.01; end
 
 % get mask
 [~,mask]  = read_nii(cfg.mask);
