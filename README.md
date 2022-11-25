@@ -1,8 +1,8 @@
-#£ Identifying Content-Invariant Neural Signatures of Phenomenal Magnitude
+##  Identifying Content-Invariant Neural Signatures of Phenomenal Magnitude
 
 Code for the paper 
 
-#'Identifying Content-Invariant Neural Signatures of Phenomenal Magnitude'
+# 'Identifying Content-Invariant Neural Signatures of Phenomenal Magnitude'
 
 with Benjy Barnett, Lau Møller Andersen, Steve Fleming, and Nadine Dijkstra.
 
