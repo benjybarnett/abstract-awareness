@@ -23,8 +23,6 @@ if ~exist(strcat('..\data\',subject,'\',subject,'_noBL_comp.mat'),'file')
         cfg.runica.pca = 305;
     elseif strcmp(subject, 'sub19')
         cfg.runica.pca = 304;
-    %elseif strcmp(subject,'sub16') %only for nonBL corrected data
-     %   cfg.runica.pca = 303;
     end
     
     cfg.channel         = 'MEG';

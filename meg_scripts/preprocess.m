@@ -23,7 +23,6 @@ function err = preprocess(subject, meg_path, events, prestim, poststim, demean,b
 
     filenames = {...
 
-    %CHECK IF FILES READING PROJECTED FILES OR ORIGINAL
         strcat('proj/PROJ0076_SUBJ00',subject(4:5),'_SER001_FILESNO001.fif')
         strcat('proj/PROJ0076_SUBJ00',subject(4:5),'_SER001_FILESNO002.fif')
         strcat('proj/PROJ0076_SUBJ00',subject(4:5),'_SER002_FILESNO001.fif')
@@ -58,10 +57,8 @@ function err = preprocess(subject, meg_path, events, prestim, poststim, demean,b
         cfg.trialdef.prestim = prestim; % seconds  adjusted with 25 ms 
         cfg.trialdef.poststim = poststim; % seconds
         cfg.trialdef.eventvalue = events;
-        cfg.trialfun = 'ft_trialfun_general';
-        %edited the source code of this function so that it removes events
-        %with length of one sample from the cfg.trl field. Can't copy it
-        %and use it outside of source code since throws weird error?
+        cfg.trialfun = 'ft_trialfun_general'; %this trial function has been edited
+
 
         cfg.trialdef.eventtype = 'STI101';
         cfg = ft_definetrial(cfg);
@@ -122,7 +119,7 @@ function err = preprocess(subject, meg_path, events, prestim, poststim, demean,b
     
     
   
-    save(strcat('..\data\',subject,'\',subject,'_noBL'),'data','-v7.3')
+    save(strcat('..\data\',subject,'\',subject),'data','-v7.3')
     
     clear data 
     
