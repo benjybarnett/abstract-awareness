@@ -139,13 +139,12 @@ for subj = 1:length(subjects)
         cfg.plot  = false;
         cfg.metric = 'confusion';
 
-        if ~ strcmp(subject,'sub02')
-            % target: all PAS ratings
-            cfg.outputName = {};
-            cfg.outputName = {strcat('multiclass_PAS_squares_conf');strcat('multiclass_PAS_diamonds_conf')};
+        % target: all PAS ratings
+        cfg.outputName = {};
+        cfg.outputName = {strcat('multiclass_PAS_squares_conf');strcat('multiclass_PAS_diamonds_conf')};
 
-            multiclass(cfg,subject)
-        end
+        multiclass(cfg,subject)
+        
        
 
         cfg.outputDir = 'Decoding/Cross/Temporal/Multiclass';
